@@ -5,6 +5,7 @@ import json
 import soundfile as sf
 import noisereduce as nr
 import tkinter
+from tkinter import ttk, scrolledtext
 from urllib.parse import urlparse
 from youtube_transcript_api import YouTubeTranscriptApi
 
@@ -12,11 +13,11 @@ from youtube_transcript_api import YouTubeTranscriptApi
 def show_text(_inputText):
     wrap_content = tkinter.Tk()
     wrap_content.title("Kết quả")
-
-    frame = tkinter.ttk.Frame(wrap_content)
+    
+    frame = ttk.Frame(wrap_content)
     frame.pack(padx=10, pady=10, fill=tkinter.BOTH, expand=True)
 
-    text_area = tkinter.scrolledtext.ScrolledText(frame, wrap=tkinter.WORD, width=100, height=30)
+    text_area = scrolledtext.ScrolledText(frame, wrap=tkinter.WORD, width=100, height=30)
     text_area.pack(fill=tkinter.BOTH, expand=True)
 
     text_area.insert(tkinter.END, _inputText)
@@ -132,14 +133,26 @@ def getListReferenceText(_defaultLangType='vi'):
     if _isNeedSave: 
         saveScriptAudioData(_jsonData)
 
-def nhap_thong_tin_gui(_needShow):
+def popupInputLinkFileName():
     """Tạo cửa sổ GUI để nhập tên và tuổi."""
 
-    def lay_thong_tin():
+    def getInfo():
         global video_url, file_path
         video_url = entryLink.get()
         file_path = entryFileName.get()
+        if file_path is None or video_url is None:  # Check if file_path is None
+            ket_qua_label.config(text="Tên file và link không được để trống.")
+            return
+        if not file_path.endswith('.mp3'):
+            ket_qua_label.config(text="Tên file phải kết thúc bằng .mp3")
+            return
+        video_url = video_url[0:video_url.index('&')] if '&' in video_url else video_url
+        file_path = downloadAudioFromYoutubeLink(video_url, file_path)
+        if file_path == None:
+            ket_qua_label.config(text="Link không đúng.")
+            return
         ket_qua_label.config(text=f"Link: {video_url}\n Tên file: {file_path}")
+        window.destroy()
 
     window = tkinter.Tk()
     window.title("Nhập thông tin")
@@ -156,30 +169,14 @@ def nhap_thong_tin_gui(_needShow):
     entryFileName.setvar("abc")
 
     # Nút bấm để lấy thông tin
-    button = tkinter.Button(window, text="Lấy thông tin", command=lay_thong_tin)
+    button = tkinter.Button(window, text="Lấy thông tin", command=getInfo)
     button.pack()
 
     # Nhãn để hiển thị kết quả
-    ket_qua_label = tkinter.Label(window, text=_needShow)
+    ket_qua_label = tkinter.Label(window, text='')
     ket_qua_label.pack()
 
     window.mainloop()
-
-def checkLinkNhapVao():
-    global file_path, video_url
-    _needShow = ''
-    while True:
-        nhap_thong_tin_gui(_needShow)
-        if file_path is None or video_url is None:  # Check if file_path is None
-            _needShow = "Tên file không được để trống."
-            continue
-        if not file_path.endswith('.mp3'):
-            _needShow = "Tên file phải kết thúc bằng .mp3"
-            continue
-       
-        video_url = video_url[0:video_url.index('&')] if '&' in video_url else video_url
-        file_path = downloadAudioFromYoutubeLink(video_url, file_path)
-        if file_path != None:
-            return video_url, file_path
-        _needShow = "Link không đúng."
+    return video_url, file_path
+    
     

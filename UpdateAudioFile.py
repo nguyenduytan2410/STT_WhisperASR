@@ -1,5 +1,3 @@
 import AudioInfo
 
-# AudioInfo.getListReferenceText()
-
-AudioInfo.checkLinkNhapVao()
+AudioInfo.getListReferenceText()

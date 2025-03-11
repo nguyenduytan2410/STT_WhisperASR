@@ -26,7 +26,7 @@ import AudioInfo
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model_t = whisper.load_model("tiny").to(device)
 
-video_url, file_path = AudioInfo.checkLinkNhapVao()
+video_url, file_path = AudioInfo.popupInputLinkFileName()
 video_url = video_url[0:video_url.index('&')] if '&' in video_url else video_url
 
 arrContent = []
