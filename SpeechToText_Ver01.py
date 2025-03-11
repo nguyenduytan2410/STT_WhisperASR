@@ -5,23 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import IPython.display as ipd
 import jiwer  
-import sys
 import AudioInfo
-
-# video_url = 'https://www.youtube.com/watch?v=Clpcxh9lNTs&ab_channel=SpriteVietnam'   # Link mặc định
-# file_path = 'Youtube.mp3'                                   # Tên file mặc định
-
-# for index, param in enumerate(sys.argv):
-#    print(param)
-#    if index > 0:
-#         if AudioInfo.isWebLink(param):
-#             video_url = param
-#         elif param.lower().endswith('.mp3') and param != '.mp3': # Lưu file với format *.mp3
-#             print(param)
-#             file_path = param
-
-# print(file_path)
-# video_url = video_url[0:video_url.index('&')] if '&' in video_url else video_url
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model_t = whisper.load_model("tiny").to(device)
@@ -29,7 +13,7 @@ model_t = whisper.load_model("tiny").to(device)
 video_url, file_path = AudioInfo.checkLinkNhapVao()
 video_url = video_url[0:video_url.index('&')] if '&' in video_url else video_url
 
-arrContent = []
+AudioInfo.boLocNhieu(file_path)
 try:
     audio_data = whisper.load_audio(file_path)
     result = model_t.transcribe(file_path, fp16 = True if device == 'cuda' else False )
@@ -113,12 +97,10 @@ transcription = result["text"]
 
 ground_final = AudioInfo.getAudioScript(video_url, detected_language)
 
-
 gt_clean = transformation(ground_final)
 trans_clean = transformation(transcription)
 
-
-    #Tính lại WER
+# Tính lại WER
 wer_score = jiwer.wer(gt_clean, trans_clean)
 
 # Đoạn văn bản cần hiển thị
