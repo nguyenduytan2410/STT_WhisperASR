@@ -43,8 +43,7 @@ def getReferenceText(_targetUrl, _langType):
         # Lấy transcript
         transcript = YouTubeTranscriptApi.get_transcript(video_id,languages=[_langType])
         # Ghép các đoạn text thành một chuỗi hoàn chỉnh
-        script = " ".join('' if item['text'].startswith('[') and item['text'].endswith(']') else item['text'] for item in transcript)
-        
+        script = " ".join('' if item['text'].startswith('[') and item['text'].endswith(']') else item['text'] for item in transcript)        
         return script
     except Exception as e:
         if "disabled" in str(e).lower():
@@ -152,7 +151,6 @@ def getListReferenceText(_defaultLangType='vi'):
 
 def popupInputLinkFileName():
     """Tạo cửa sổ GUI để nhập tên và tuổi."""
-
     def getInfo():
         global video_url, file_path
         video_url = entryLink.get()
