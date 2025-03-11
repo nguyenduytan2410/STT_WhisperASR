@@ -1,0 +1,15 @@
+librosa
+yt_dlp
+soundfile
+noisereduce
+youtube_transcript_api
+torch
+whisper
+librosa
+matplotlib
+numpy
+IPython
+jiwer  
+AudioInfo
+ffmpeg-python
+tk
