@@ -150,9 +150,10 @@ def getListReferenceText(_defaultLangType='vi'):
         saveScriptAudioData(_jsonData)
 
 def popupInputLinkFileName():
-    """Tạo cửa sổ GUI để nhập tên và tuổi."""
+    """Tạo cửa sổ GUI để Link và tên file"""
+    video_url = None 
+    file_path = None
     def getInfo():
-        global video_url, file_path
         video_url = entryLink.get()
         file_path = entryFileName.get()
         if file_path is None or video_url is None:  # Check if file_path is None
@@ -192,6 +193,7 @@ def popupInputLinkFileName():
     ket_qua_label.pack()
 
     window.mainloop()
-    return video_url, file_path
+
+    return popupInputLinkFileName() if file_path is None else video_url, file_path
     
     
