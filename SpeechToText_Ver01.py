@@ -112,4 +112,4 @@ text_to_show =  f"Dữ liệu âm thanh: {audio_str}\n\n" \
                 f"Word Error Rate (WER): {wer_score:.2%}\n\n"
 
 # Gọi hàm tạo cửa sổ và hiển thị văn bản
-AudioInfo.show_text(text_to_show)
+AudioInfo.showResultText(text_to_show)
