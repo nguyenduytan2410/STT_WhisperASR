@@ -4,6 +4,7 @@ import os
 import json
 import soundfile as sf
 import noisereduce as nr
+import matplotlib.pyplot as plt
 import tkinter
 from tkinter import ttk, scrolledtext
 from urllib.parse import urlparse
@@ -42,8 +43,7 @@ def getReferenceText(_targetUrl, _langType):
         # Lấy transcript
         transcript = YouTubeTranscriptApi.get_transcript(video_id,languages=[_langType])
         # Ghép các đoạn text thành một chuỗi hoàn chỉnh
-        script = " ".join('' if item['text'].startswith('[') and item['text'].endswith(']') else item['text'] for item in transcript)
-        
+        script = " ".join('' if item['text'].startswith('[') and item['text'].endswith(']') else item['text'] for item in transcript)        
         return script
     except Exception as e:
         if "disabled" in str(e).lower():
@@ -119,7 +119,23 @@ def boLocNhieu(_filePath):
     denoised_audio = nr.reduce_noise(y=audio, sr=sr, y_noise=noise_part, prop_decrease=0.5)
 
     sf.write(_filePath.replace('.mp3', '_1.mp3'), denoised_audio, sr)
+     # Vẽ đồ thị
+    plt.figure(figsize=(12, 6))
 
+    plt.subplot(2, 1, 1)
+    librosa.display.waveshow(audio, sr=sr, alpha=0.5, color='r')
+    plt.title("Tín hiệu gốc (Original Audio)")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Amplitude")
+
+    plt.subplot(2, 1, 2)
+    librosa.display.waveshow(denoised_audio, sr=sr, alpha=0.5, color='b')
+    plt.title("Tín hiệu sau lọc nhiễu (Denoised Audio)")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Amplitude")
+
+    plt.tight_layout()
+    plt.show()
 
 # Load file text từ đường link youtube thông qua youtube_transcript_api
 def getListReferenceText(_defaultLangType='vi'):
