@@ -11,13 +11,16 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model_t = whisper.load_model("small").to(device)
 
 video_url, file_path = AudioInfo.popupInputLinkFileName()
-video_url = video_url[0:video_url.index('&')] if '&' in video_url else video_url
+video_url = video_url[0:video_url.index('&')] if '&' in video_url and 'youtube' in video_url else video_url
 
 AudioInfo.boLocNhieu(file_path)
+
 try:
     audio_data = whisper.load_audio(file_path)
     result = model_t.transcribe(file_path, fp16 = True if device == 'cuda' else False )
     print("Audio loaded successfully!")
+    result_1 = model_t.transcribe(file_path.replace('.mp3', '_1.mp3'), fp16 = True if device == 'cuda' else False )
+    print("Audio with filter loaded successfully!")
 except FileNotFoundError as e:
     print(f"Error: {e}")
     print("Please make sure FFmpeg is installed and added to your PATH.")
@@ -94,22 +97,33 @@ transformation = jiwer.Compose([
 ])
 
 transcription = result["text"]
-
-ground_final = AudioInfo.getAudioScript(video_url, detected_language)
-
-gt_clean = transformation(ground_final)
+transcription_1 = result_1["text"]
 
 trans_clean = transformation(transcription)
+trans_clean_1 = transformation(transcription_1)
 
 # Tính lại WER
-wer_score = jiwer.wer(gt_clean, trans_clean)
+if 'youtube' in video_url:
+    ground_final = AudioInfo.getAudioScript(video_url, detected_language)
+    gt_clean = transformation(ground_final)
+    wer_score = jiwer.wer(gt_clean, trans_clean)
+    wer_score_1 = jiwer.wer(gt_clean, trans_clean_1)
 
-# Đoạn văn bản cần hiển thị
-text_to_show =  f"Dữ liệu âm thanh: {audio_str}\n\n" \
-                f"Kết quả nhận: {trans_clean}\n\n" \
-                f"Kết quả gốc: {gt_clean}\n\n" \
-                f"Loại ngôn ngữ: {detected_language}\n\n" \
-                f"Word Error Rate (WER): {wer_score:.2%}\n\n"
+    # Đoạn văn bản cần hiển thị
+    text_to_show =  f"Dữ liệu âm thanh      : {audio_str}\n\n" \
+                    f"Kết quả nhận chưa lọc : {trans_clean}\n\n" \
+                    f"Kết quả nhận đã lọc   : {trans_clean_1}\n\n" \
+                    f"Kết quả gốc           : {gt_clean}\n\n" \
+                    f"Loại ngôn ngữ         : {detected_language}\n\n" \
+                    f"Word Error Rate (WER) 1: {wer_score:.2%}\n\n" \
+                    f"Word Error Rate (WER) 2: {wer_score_1:.2%}\n\n" \
+    
+else :
+    # Đoạn văn bản cần hiển thị
+    text_to_show =  f"Dữ liệu âm thanh      : {audio_str}\n\n" \
+                    f"Kết quả nhận chưa lọc : {trans_clean}\n\n" \
+                    f"Kết quả nhận đã lọc   : {trans_clean_1}\n\n" \
+                    f"Loại ngôn ngữ         : {detected_language}\n\n"
 
 # Gọi hàm tạo cửa sổ và hiển thị văn bản
 AudioInfo.showResultText(text_to_show)

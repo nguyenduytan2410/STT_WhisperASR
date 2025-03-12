@@ -200,7 +200,7 @@ def getListReferenceText(_defaultLangType='vi'):
     _isNeedSave = False
     for entry in _jsonData["data"]:
         if entry["content"] == '':
-            entry["link"] = entry["link"][0:entry["link"].index('&')] if '&' in entry["link"] else entry["link"]
+            entry["link"] = entry["link"][0:entry["link"].index('&')] if '&' in entry["link"] and 'youtube' in entry["link"] else entry["link"]
             entry["content"] = getAudioScript(entry["link"], _defaultLangType)
             _isNeedSave = True
     if _isNeedSave: 
