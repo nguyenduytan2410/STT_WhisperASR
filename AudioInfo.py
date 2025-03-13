@@ -12,6 +12,12 @@ from youtube_transcript_api import YouTubeTranscriptApi
 import requests
 import threading
 
+def removeSpecialChars(_inputText):
+    # Tạo bảng ánh xạ để xóa mọi ký tự không phải a-z, A-Z, 0-9
+    allowed = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'
+    mapping = str.maketrans('', '', ''.join(c for c in map(chr, range(128)) if c not in allowed))
+    return _inputText.translate(mapping)
+
 #Hàm hiển thị đoạn văn bản lên scroll view
 def showResultText(_resultText):
     wrap_content = tkinter.Tk()
@@ -218,8 +224,8 @@ def popupInputLinkFileName():
             return
         if _filePath is None or _filePath == '':
             _filePath = 'default_name.mp3'
-        if not _filePath.endswith('.mp3'):
-            _filePath = _filePath + '.mp3'
+        _filePath = _filePath[0:_filePath.index('.mp3')] if '.mp3' in _filePath else _filePath
+        _filePath = removeSpecialChars(_filePath) + '.mp3'
         if isYoutubeLink(_videoUrl) :
             _filePath = downloadAudioFromYoutubeLink(_videoUrl, _filePath, resultLabel)
         else :
