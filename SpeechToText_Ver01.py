@@ -55,8 +55,8 @@ transCleanDe = transformation(transcriptionDeNAud)
 if 'youtube' in video_url:
     ground_final = AudioInfo.getAudioScript(video_url, detectedLanguage)
     gtClean = transformation(ground_final)
-    werScore = jiwer.wer(gt_clean, transClean)
-    werScoreDe = jiwer.wer(gt_clean, transCleanDe)
+    werScore = jiwer.wer(gtClean, transClean)
+    werScoreDe = jiwer.wer(gtClean, transCleanDe)
 
     # Đoạn văn bản cần hiển thị
     text_to_show =  f"Dữ liệu âm thanh      : {originalAudioStr}\n\n" \
