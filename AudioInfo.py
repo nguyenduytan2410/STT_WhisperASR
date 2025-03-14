@@ -33,6 +33,8 @@ def showResultText(_resultText):
 
     text_area.insert(tkinter.END, _resultText)
 
+    tkinter.Button(wrap_content, text="Đóng", command = wrap_content.destroy).pack(pady=10)
+
     wrap_content.mainloop()
 
 # Kiểm tra url nhập vào có phải là link youtube không?
@@ -66,24 +68,7 @@ def getReferenceText(_targetUrl, _langType):
         return ''
 
 # Tải file mp3 từ youtube link
-def downloadAudioFromYoutubeLink(_targetUrl, _outputFile="audio.mp3", _showError = {}, _showSuccess = {}):
-    # Tạo cửa sổ Tkinter
-    window = tkinter.Tk()
-    window.title("Downloading Audio")
-    window.geometry("400x150")
-
-    # Label hiển thị trạng thái
-    statusLabel = tkinter.Label(window, text=f"Downloading: {_outputFile}")
-    statusLabel.pack(pady=10)
-
-    # Thanh tiến trình
-    progress = ttk.Progressbar(window, length=300, mode='determinate')
-    progress.pack(pady=10)
-
-    # Label hiển thị phần trăm
-    percentLabel = tkinter.Label(window, text="0%")
-    percentLabel.pack(pady=5)
-
+def downloadAudioFromYoutubeLink(_targetUrl, _outputFile="audio.mp3", _updateProgress = {}, _showSuccess = {}, _showError = {}):
     # Hook để cập nhật tiến trình
     def myHook(d):
         if d['status'] == 'downloading':
@@ -91,13 +76,8 @@ def downloadAudioFromYoutubeLink(_targetUrl, _outputFile="audio.mp3", _showError
             downloadedBytes = d.get('downloaded_bytes', 0)
             if totalBytes > 0:
                 percentage = (downloadedBytes / totalBytes) * 100
-                progress['value'] = percentage
-                percentLabel.config(text=f"{percentage:.1f}%")
-                window.update_idletasks()
+                _updateProgress(percentage)
         elif d['status'] == 'finished':
-            progress['value'] = 100
-            percentLabel.config(text="100% - Converting...")
-            window.update_idletasks()
             _showSuccess()
             
     # Cấu hình yt-dlp
@@ -111,58 +91,26 @@ def downloadAudioFromYoutubeLink(_targetUrl, _outputFile="audio.mp3", _showError
     # Hàm tải chạy trong thread riêng
     def downloadThread():
         try:
-            if os.path.exists(_outputFile):
-                os.remove(_outputFile)
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([_targetUrl])
-            statusLabel.config(text=f"Completed: {_outputFile}")
-            percentLabel.config(text="100% - Done!")
+            # c
         except Exception as e:
-            statusLabel.config(text=f"Error: {e}")
-            percentLabel.config(text="Failed")
+            print(f"Error: {e}")
             _showError()
         finally:
-            # Thêm nút đóng cửa sổ khi hoàn tất
-            closeButton = tkinter.Button(window, text="Close", command=window.destroy)
-            closeButton.pack(pady=10)
+            print('Tải hoàn tất')
 
     # Chạy tải trong thread để không làm freeze GUI
     threading.Thread(target=downloadThread, daemon=True).start()
 
-    # Chạy vòng lặp Tkinter
-    window.mainloop()
-
-    # Trả về đường dẫn file nếu thành công
-    if os.path.exists(_outputFile):
-        return _outputFile
-    return None
-
 # Tải file nhạc mp3 từ link bất kì
-def downloadFile(_url, _outputFile = 'audio.mp3',  _showError = {}, _showSuccess = {}):
-    # Tạo cửa sổ Tkinter
-    window = tkinter.Tk()
-    window.title("File Download")
-    window.geometry("400x150")
-
-    # Label hiển thị tên file
-    statusLabel = tkinter.Label(window, text=f"Downloading: {_outputFile}")
-    statusLabel.pack(pady = 10)
-
-    # Thanh tiến trình
-    progress = ttk.Progressbar(window, length=300, mode='determinate')
-    progress.pack(pady = 10)
-
-    # Label hiển thị phần trăm
-    percent_label = tkinter.Label(window, text = "0%")
-    percent_label.pack(pady = 5)
+def downloadFile(_targetUrl, _outputFile="audio.mp3", _updateProgress = {}, _showSuccess = {}, _showError = {}):
 
     # Hàm tải file chạy trong thread riêng
     def downloadThread():
         try:
-            if os.path.exists(_outputFile):
-                os.remove(_outputFile)
             # Gửi yêu cầu với stream=True để tải theo từng phần
-            response = requests.get(_url, stream=True)
+            response = requests.get(_targetUrl, stream=True)
             totalSize = int(response.headers.get('content-length', 0))
 
             if response.status_code == 200:
@@ -170,43 +118,26 @@ def downloadFile(_url, _outputFile = 'audio.mp3',  _showError = {}, _showSuccess
                 with open(_outputFile, 'wb') as file:
                     downloaded = 0
                     chunkSize = 1024
-                    for data in response.iter_content(chunk_size=chunkSize):
+                    for data in response.iter_content(chunk_size = chunkSize):
                         size = file.write(data)
                         downloaded += size
                         if totalSize > 0:
                             percentage = (downloaded / totalSize) * 100
-                            progress['value'] = percentage
-                            percent_label.config(text=f"{percentage:.1f}%")
-                            window.update_idletasks()
-                
-                statusLabel.config(text=f"Completed: {_outputFile}")
-                percent_label.config(text="100% - Done!")
+                            _updateProgress(percentage)
                 _showSuccess()
             else:
-                statusLabel.config(text=f"Error: HTTP {response.status_code}")
-                percent_label.config(text="Failed")
+                print(f"Error: HTTP {response.status_code}")
 
         except Exception as e:
-            statusLabel.config(text=f"Error: {e}")
-            percent_label.config(text="Failed")
+            print(f"Error: {e}")
             _showError()
 
         finally:
-            # Thêm nút đóng
-            closeButton = tkinter.Button(window, text="Close", command = window.destroy)
-            closeButton.pack(pady = 10)
+            print('Tải hoàn tất')
+           
 
     # Chạy tải trong thread riêng để không làm freeze GUI
-    threading.Thread(target=downloadThread, daemon=True).start()
-
-    # Chạy vòng lặp Tkinter
-    window.mainloop()
-
-    # Kiểm tra xem file đã tải thành công chưa
-    if os.path.exists(_outputFile):
-        print(f"Đã tải xong: {_outputFile}")
-        return _outputFile
-    return None
+    threading.Thread(target = downloadThread, daemon=True).start()
 
 # Đọc file audio.json
 def loadAudioData(_jsonFile="audio.json"):
@@ -253,7 +184,7 @@ def boLocNhieu(_filePath, _sr=22050):
 
     # Áp dụng bộ lọc giảm nhiễu
     _denoisedAudio = nr.reduce_noise(y = _originalAudio, sr = _sr, y_noise = _noisePart, prop_decrease = 0.5)
-    _filePathDN = _filePath.replace('.mp3', '_1.mp3')
+    _filePathDN = _filePath.replace('.mp3', '_denoise.mp3')
     if os.path.exists(_filePathDN):
         os.remove(_filePathDN)
 
@@ -316,27 +247,65 @@ def popupInputLinkFileName():
             entryFileName.insert(0, _filePath) 
         _filePath = _filePath[0:_filePath.index('.mp3')] if '.mp3' in _filePath else _filePath
         _filePath = removeSpecialChars(_filePath) + '.mp3'
+        if os.path.exists(_filePath):
+            os.remove(_filePath)
+        _filePathDN = _filePath.replace('.mp3', '_denoise.mp3')
+        if os.path.exists(_filePathDN):
+            os.remove(_filePathDN)
+        showProgressDownload()
         if isYoutubeLink(_videoUrl) :
-            _filePath = downloadAudioFromYoutubeLink(_videoUrl, _filePath, showError, showSuccess)
+            downloadAudioFromYoutubeLink(_videoUrl, _filePath, updateProgress, showSuccess, showError)
         else :
-            _filePath = downloadFile(_videoUrl, _filePath, showError, showSuccess)
+            downloadFile(_videoUrl, _filePath, updateProgress, showSuccess, showError)
     
     def showError():
-        resultLabel.config(text="Link không hợp lệ!")
-        buttonGet.pack_forget()
-        buttonClose.pack_forget()
+        window.geometry("400x150")
+        disableView()
+        buttonFrame.pack(padx=10)
         buttonGet.pack()
+        resultLabel.pack()
         buttonGet.config(text="Tải lại file")
+        resultLabel.config(text="Lỗi tải file, vui lòng nhập lại link và tải lại!")
+        
+
     def showSuccess():
-        resultLabel.config(text=f"Link: {_videoUrl[:47] + '...' if len(_videoUrl) > 50 else _videoUrl}\n Tên file: {_filePath}")
-        buttonGet.pack_forget()
-        buttonClose.pack_forget()
+        window.geometry("400x300")
+        disableView()
+        progressFrame.pack(pady=10)
+        statusLabel.config(text=f"Completed: {_filePath}")
+        percentLabel.config(text="100% - Done!")
+        buttonFrame.pack()
         buttonGet.pack(side=tkinter.LEFT, padx=10)
         buttonClose.pack(side=tkinter.LEFT, padx=10)
         buttonGet.config(text="Tải lại file")
+        resultLabel.pack()
+        resultLabel.config(text=f"Link: {_videoUrl[:47] + '...' if len(_videoUrl) > 50 else _videoUrl}\n Tên file: {_filePath}")
+    
+    def showProgressDownload():
+        window.geometry("400x220")
+        disableView()
+        progressFrame.pack(pady=10)
+        statusLabel.config(text=f"Downloading: {_filePath}")
+        percentLabel.config(text="0%")
+        progress['value'] = 0
+        window.update_idletasks()
+    
+    def updateProgress(_value):
+        progress['value'] = _value
+        percentLabel.config(text=f"{_value:.1f}%")
+        window.update_idletasks()
+
+    def disableView():
+        progressFrame.pack_forget()
+        buttonFrame.pack_forget()
+        buttonGet.pack_forget()
+        buttonClose.pack_forget()
+        resultLabel.pack_forget()
+        
 
     window = tkinter.Tk()
     window.title("Nhập thông tin")
+    window.geometry("400x150")
 
     # Nhãn và hộp nhập liệu cho tên
     tkinter.Label(window, text="Đường dẫn liên kết:").pack()
@@ -360,8 +329,25 @@ def popupInputLinkFileName():
     buttonGet = tkinter.Button(buttonFrame, text="Tải file", command = getInfo)
     buttonGet.pack()
 
+    # Tạo Frame để chứa thông tin về tiến trình tải file
+    progressFrame = tkinter.Frame(window)
+
+    # Label hiển thị trạng thái
+    statusLabel = tkinter.Label(progressFrame, text='')
+    statusLabel.pack(pady = 10)
+
+    # Thanh tiến trình
+    progress = ttk.Progressbar(progressFrame, length=300, mode='determinate')
+    progress.pack(pady = 10)
+
+    # Label hiển thị phần trăm
+    percentLabel = tkinter.Label(progressFrame, text="0%")
+    percentLabel.pack(pady = 5)
+
     # Nút bấm để vẽ biểu đồ
     buttonClose = tkinter.Button(buttonFrame, text="Đóng", command = window.destroy)
 
     window.mainloop()
-    return _videoUrl, _filePath
+    if os.path.exists(_filePath):
+        return _videoUrl, _filePath
+    return None

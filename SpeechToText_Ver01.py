@@ -1,6 +1,6 @@
 import torch
 import whisper
-import librosa
+import sys
 import matplotlib.pyplot as plt
 import numpy as np
 import IPython.display as ipd
@@ -14,16 +14,20 @@ video_url, file_path = AudioInfo.popupInputLinkFileName()
 video_url = video_url[0:video_url.index('&')] if '&' in video_url and 'youtube' in video_url else video_url
 
 try:
+    _isFP16 = True if device == 'cuda' else False
     originalAudio, denoisedAudio = AudioInfo.boLocNhieu(file_path)
-    resultOriAud = model_t.transcribe(file_path, fp16 = True if device == 'cuda' else False )
+    print("Noise-free audio created successfully!")
+    resultOriAud = model_t.transcribe(file_path, fp16 = _isFP16)
     print("Audio loaded successfully!")
-    resultDeNAud = model_t.transcribe(file_path.replace('.mp3', '_1.mp3'), fp16 = True if device == 'cuda' else False )
+    resultDeNAud = model_t.transcribe(file_path.replace('.mp3', '_denoise.mp3'), fp16 = _isFP16)
     print("Audio with filter loaded successfully!")
 except FileNotFoundError as e:
     print(f"Error: {e}")
     print("Please make sure FFmpeg is installed and added to your PATH.")
+    sys.exit(1)    # Dừng chương trình
 except Exception as e:
     print(f"An unexpected error occurred: {e}")
+    sys.exit(1)    # Dừng chương trình
 
 # # Vẽ biểu đồ
 originalAudioTrim = whisper.pad_or_trim(originalAudio)
