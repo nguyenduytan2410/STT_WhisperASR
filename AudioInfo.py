@@ -11,7 +11,6 @@ from urllib.parse import urlparse
 from youtube_transcript_api import YouTubeTranscriptApi
 import requests
 import threading
-import whisper
 
 # Xóa kí tự đặc biệt khi đặt tên file
 def removeSpecialChars(_inputText):
@@ -200,6 +199,7 @@ def boLocNhieu(_filePath, _sr=22050):
 
 #Vẽ biểu đồ so sánh và đồ thị Mel Spectrogram của âm thanh gốc
 def showGraphCompairMelSpec(_originalAudio, _denoisedAudio, mel, _sr=22050):
+    plt.figure(figsize=(10, 6)) # Thiết lập độ dài rộng cho cửa sổ biểu đồ
      # Vẽ đồ thị
     plt.subplot(2, 2, 1)  # 2 hàng, 2 cột, vị trí 1
     librosa.display.waveshow(_originalAudio, sr = _sr, alpha=0.5, color='r')
@@ -242,8 +242,9 @@ def getListReferenceText(_defaultLangType='vi'):
 
 # Mở cửa sổ để nhập thông tin link và tên file lưu vào bộ nhớ
 def popupInputLinkFileName():
+    global _strModel, _videoUrl, _filePath
     def getInfo():
-        global _videoUrl, _filePath
+        global _strModel, _videoUrl, _filePath
         _videoUrl = entryLink.get()
         _filePath = entryFileName.get()
         if _videoUrl is None or _videoUrl == '':  # Check if file_path is None
@@ -266,7 +267,7 @@ def popupInputLinkFileName():
             downloadFile(_videoUrl, _filePath, updateProgress, showSuccess, showError)
     
     def showError():
-        window.geometry("400x150")
+        window.geometry("400x220")
         disableView()
         buttonFrame.pack(padx=10)
         buttonGet.pack()
@@ -276,12 +277,13 @@ def popupInputLinkFileName():
         
 
     def showSuccess():
-        window.geometry("400x300")
+        global _strModel, _videoUrl, _filePath
+        window.geometry("400x380")
         disableView()
-        progressFrame.pack(pady=10)
+        frameProgress.pack(pady=10)
         statusLabel.config(text=f"Completed: {_filePath}")
         percentLabel.config(text="100% - Done!")
-        buttonFrame.pack()
+        buttonFrame.pack(pady=10)
         buttonGet.pack(side=tkinter.LEFT, padx=10)
         buttonClose.pack(side=tkinter.LEFT, padx=10)
         buttonGet.config(text="Tải lại file")
@@ -289,9 +291,10 @@ def popupInputLinkFileName():
         resultLabel.config(text=f"Link: {_videoUrl[:47] + '...' if len(_videoUrl) > 50 else _videoUrl}\n Tên file: {_filePath}")
     
     def showProgressDownload():
-        window.geometry("400x220")
+        global _strModel, _videoUrl, _filePath
+        window.geometry("400x300")
         disableView()
-        progressFrame.pack(pady=10)
+        frameProgress.pack(pady=10)
         statusLabel.config(text=f"Downloading: {_filePath}")
         percentLabel.config(text="0%")
         progress['value'] = 0
@@ -303,16 +306,42 @@ def popupInputLinkFileName():
         window.update_idletasks()
 
     def disableView():
-        progressFrame.pack_forget()
+        frameProgress.pack_forget()
         buttonFrame.pack_forget()
         buttonGet.pack_forget()
         buttonClose.pack_forget()
         resultLabel.pack_forget()
-        
+    
+    def onCheckbuttonChange():
+        global _strModel, _videoUrl, _filePath
+        try :
+            labelModel.config(text =(f"You selected: {_strModel}{'.en' if var.get() else ''}"))
+            if var.get() :
+                labelWarning.pack()
+                labelWarning.config(text = f'Model {_strModel}.en chỉ sử dụng cho tiếng anh.')
+            else :
+                labelWarning.pack_forget()
+        except :
+            labelModel.config(text ="Select an option:")
+    
+    def onSelect(event):
+        global _strModel, _videoUrl, _filePath
+        _strModel = selectBox.get()
+        if _strModel == 'large' or _strModel == 'turbo':
+            checkBox.config(state = tkinter.DISABLED)
+            var.set(0)
+        else :
+            checkBox.config(state = tkinter.ACTIVE)
+        if var.get() :
+            labelWarning.pack()
+            labelWarning.config(text = f'Model {_strModel}.en chỉ sử dụng cho tiếng anh.')
+        else :
+            labelWarning.pack_forget()
+        labelModel.config(text = f"You selected: {_strModel}{'.en' if var.get() else ''}")
 
     window = tkinter.Tk()
     window.title("Nhập thông tin")
-    window.geometry("400x150")
+    window.geometry("400x220")
 
     # Nhãn và hộp nhập liệu cho tên
     tkinter.Label(window, text="Đường dẫn liên kết:").pack()
@@ -324,9 +353,31 @@ def popupInputLinkFileName():
     entryFileName = tkinter.Entry(window)
     entryFileName.pack()
 
-    # Tạo Frame để chứa hai nút
+    frameModel = tkinter.Frame(window)
+    frameModel.pack()
+
+    # Tạo label để hiển thị thông tin tùy chọn
+    labelModel = tkinter.Label(frameModel, text="Select an option:")
+    labelModel.pack(pady=10)
+    labelWarning = tkinter.Label(frameModel, text="")
+
+    frameSubModel = tkinter.Frame(frameModel)
+    frameSubModel.pack()
+
+    # Tạo select box để chọn phiên bản model whisper
+    selectBox = ttk.Combobox(frameSubModel, values = ["tiny", "base", "small", "medium", "large", "turbo"], state = "readonly")
+    selectBox.set("Chọn model AI")
+    selectBox.pack(side=tkinter.LEFT, padx = 10)
+    selectBox.bind("<<ComboboxSelected>>", onSelect)
+
+    var = tkinter.IntVar()
+    checkBox = tkinter.Checkbutton(frameSubModel, text="Only English", variable = var, command = onCheckbuttonChange)
+    checkBox.pack(side=tkinter.RIGHT, padx=10)
+    checkBox.config(state = tkinter.DISABLED)
+
+    # Tạo Frame để chứa hai nút lấy thông tin và đóng cửa sổ
     buttonFrame = tkinter.Frame(window)
-    buttonFrame.pack(pady=10)
+    buttonFrame.pack()
 
     # Nhãn để hiển thị kết quả
     resultLabel = tkinter.Label(window, text='')
@@ -334,27 +385,35 @@ def popupInputLinkFileName():
 
     # Nút bấm để lấy thông tin
     buttonGet = tkinter.Button(buttonFrame, text="Tải file", command = getInfo)
-    buttonGet.pack()
+    buttonGet.pack(pady = 10)
 
-    # Tạo Frame để chứa thông tin về tiến trình tải file
-    progressFrame = tkinter.Frame(window)
-
-    # Label hiển thị trạng thái
-    statusLabel = tkinter.Label(progressFrame, text='')
-    statusLabel.pack(pady = 10)
-
-    # Thanh tiến trình
-    progress = ttk.Progressbar(progressFrame, length=300, mode='determinate')
-    progress.pack(pady = 10)
-
-    # Label hiển thị phần trăm
-    percentLabel = tkinter.Label(progressFrame, text="0%")
-    percentLabel.pack(pady = 5)
 
     # Nút bấm để vẽ biểu đồ
     buttonClose = tkinter.Button(buttonFrame, text="Đóng", command = window.destroy)
 
+    # Tạo Frame để chứa thông tin về tiến trình tải file
+    frameProgress = tkinter.Frame(window)
+
+    # Label hiển thị trạng thái
+    statusLabel = tkinter.Label(frameProgress, text='')
+    statusLabel.pack(pady = 10)
+
+    # Thanh tiến trình
+    progress = ttk.Progressbar(frameProgress, length=300, mode='determinate')
+    progress.pack(pady = 10)
+
+    # Label hiển thị phần trăm
+    percentLabel = tkinter.Label(frameProgress, text="0%")
+    percentLabel.pack(pady = 5)
+
     window.mainloop()
-    if os.path.exists(_filePath):
-        return _videoUrl, _filePath
-    return None
+    try:
+        try :
+            _strModel = f"{'small' if _strModel is None or _strModel == '' else _strModel}{'.en' if var.get() else ''}"
+        except:
+            _strModel = 'small'
+        if os.path.exists(_filePath):
+            return _videoUrl, _filePath, _strModel
+        return None, None, None
+    except Exception as e:
+        return None, None, None

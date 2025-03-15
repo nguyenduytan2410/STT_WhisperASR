@@ -1,16 +1,21 @@
 import torch
 import whisper
 import sys
-import matplotlib.pyplot as plt
 import numpy as np
 import IPython.display as ipd
 import jiwer  
 import AudioInfo
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model_t = whisper.load_model("small").to(device)
 
-video_url, file_path = AudioInfo.popupInputLinkFileName()
+
+video_url, file_path, strModel = AudioInfo.popupInputLinkFileName()
+
+if video_url is None or file_path is None or strModel is None:
+    sys.exit(1)    # Dừng chương trình
+
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+model_t = whisper.load_model(strModel).to(device)
+
 video_url = video_url[0:video_url.index('&')] if '&' in video_url and 'youtube' in video_url else video_url
 
 try:
