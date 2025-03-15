@@ -13,3 +13,4 @@ jiwer
 AudioInfo
 ffmpeg-python
 tk
+git+https://github.com/openai/whisper.git
