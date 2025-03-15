@@ -15,10 +15,17 @@ import whisper
 
 # Xóa kí tự đặc biệt khi đặt tên file
 def removeSpecialChars(_inputText):
-    # Tạo bảng ánh xạ để xóa mọi ký tự không phải a-z, A-Z, 0-9
+    # Tạo bảng ánh xạ để xóa mọi ký tự không phải a-z, A-Z, 0-9, _
     allowed = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'
     mapping = str.maketrans('', '', ''.join(c for c in map(chr, range(128)) if c not in allowed))
-    return _inputText.translate(mapping)
+    
+    # Xóa ký tự đặc biệt
+    result = _inputText.translate(mapping)
+    
+    # Xóa dấu gạch dưới ở đầu và cuối
+    result = result.strip('_')
+    
+    return result
 
 # Hàm hiển thị đoạn văn bản lên scroll view
 def showResultText(_resultText):

@@ -55,28 +55,23 @@ transcriptionDeNAud = resultDeNAud["text"]
 transClean = transformation(transcriptionOriAud)
 transCleanDe = transformation(transcriptionDeNAud)
 
+text_to_show =  f"Dữ liệu âm thanh      : {originalAudioStr}\n\n" \
+                f"Kết quả nhận chưa lọc : {transClean}\n\n" \
+                f"Kết quả nhận đã lọc   : {transCleanDe}\n\n" \
+                f"Loại ngôn ngữ         : {detectedLanguage}\n\n"
+
 # Tính lại và hiển thị văn bản
 if 'youtube' in video_url:
-    ground_final = AudioInfo.getAudioScript(video_url, detectedLanguage)
-    gtClean = transformation(ground_final)
-    werScore = jiwer.wer(gtClean, transClean)
-    werScoreDe = jiwer.wer(gtClean, transCleanDe)
+    referenceText = AudioInfo.getAudioScript(video_url, detectedLanguage)
+    if referenceText != '':
+        gtClean = transformation(referenceText)
+        werScore = jiwer.wer(gtClean, transClean)
+        werScoreDe = jiwer.wer(gtClean, transCleanDe)
 
-    # Đoạn văn bản cần hiển thị
-    text_to_show =  f"Dữ liệu âm thanh      : {originalAudioStr}\n\n" \
-                    f"Kết quả nhận chưa lọc : {transClean}\n\n" \
-                    f"Kết quả nhận đã lọc   : {transCleanDe}\n\n" \
-                    f"Kết quả gốc           : {gtClean}\n\n" \
-                    f"Loại ngôn ngữ         : {detectedLanguage}\n\n" \
-                    f"Word Error Rate (WER) 1: {werScore:.2%}\n\n" \
-                    f"Word Error Rate (WER) 2: {werScoreDe:.2%}\n\n" \
-    
-else :
-    # Đoạn văn bản cần hiển thị
-    text_to_show =  f"Dữ liệu âm thanh      : {originalAudioStr}\n\n" \
-                    f"Kết quả nhận chưa lọc : {transClean}\n\n" \
-                    f"Kết quả nhận đã lọc   : {transCleanDe}\n\n" \
-                    f"Loại ngôn ngữ         : {detectedLanguage}\n\n"
+        # Đoạn văn bản cần hiển thị
+        text_to_show += f"Dữ liệu làm tham chiếu : {gtClean}\n\n" \
+                        f"Word Error Rate (WER) 1: {werScore:.2%}\n\n" \
+                        f"Word Error Rate (WER) 2: {werScoreDe:.2%}\n\n" \
 
 # Gọi hàm tạo cửa sổ và hiển thị văn bản
 AudioInfo.showResultText(text_to_show)
