@@ -182,7 +182,7 @@ def getAudioScript(_targetUrl, _langType):
     return _content
 
 # Bộ lọc nhiễu
-def boLocNhieu(_filePath, _sr=22050):
+def boLocNhieu(_filePath, _sr = 16000):
     _originalAudio, _sr = librosa.load(_filePath, sr=_sr)
     
     # Lấy một phần tín hiệu làm noise profile (VD: đoạn đầu tiên)
@@ -198,7 +198,7 @@ def boLocNhieu(_filePath, _sr=22050):
     return _originalAudio, _denoisedAudio
 
 #Vẽ biểu đồ so sánh và đồ thị Mel Spectrogram của âm thanh gốc
-def showGraphCompairMelSpec(_originalAudio, _denoisedAudio, mel, _sr=22050):
+def showGraphCompairMelSpec(_originalAudio, _denoisedAudio, mel, _sr = 16000):
     plt.figure(figsize=(10, 6)) # Thiết lập độ dài rộng cho cửa sổ biểu đồ
      # Vẽ đồ thị
     plt.subplot(2, 2, 1)  # 2 hàng, 2 cột, vị trí 1
@@ -214,7 +214,7 @@ def showGraphCompairMelSpec(_originalAudio, _denoisedAudio, mel, _sr=22050):
     plt.xlabel("Thời gian (giây)")
     plt.ylabel("Biên độ")
 
-    # Biểu đồ 3: Mel Spectrogram (chiếm cả hai cột ở hàng dưới
+    # Biểu đồ 3: Mel Spectrogram
     plt.subplot(2, 1, 2)  # 2 hàng, 1 cột, vị trí 2 (hàng dưới)
     plt.imshow(mel.cpu().numpy(), interpolation='nearest', aspect='auto')
     plt.title("Mel Spectrogram của tín hiệu")
@@ -252,9 +252,9 @@ def popupInputLinkFileName():
             return
         if _filePath is None or _filePath == '':
             _filePath = 'default_name'
-            entryFileName.insert(0, _filePath) 
         _filePath = _filePath[0:_filePath.index('.mp3')] if '.mp3' in _filePath else _filePath
         _filePath = removeSpecialChars(_filePath) + '.mp3'
+        entryFileName.insert(0, _filePath) 
         if os.path.exists(_filePath):
             os.remove(_filePath)
         _filePathDN = _filePath.replace('.mp3', '_denoise.mp3')

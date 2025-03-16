@@ -6,9 +6,9 @@ import IPython.display as ipd
 import jiwer  
 import AudioInfo
 
-
-
 video_url, file_path, strModel = AudioInfo.popupInputLinkFileName()
+
+print(strModel)
 
 if video_url is None or file_path is None or strModel is None:
     sys.exit(1)    # Dừng chương trình
@@ -36,13 +36,13 @@ except Exception as e:
 
 # # Vẽ biểu đồ
 originalAudioTrim = whisper.pad_or_trim(originalAudio)
-melOriginalAudio = whisper.log_mel_spectrogram(originalAudioTrim).to(model_t.device)
+melOriginalAudio = whisper.log_mel_spectrogram(originalAudioTrim, n_mels = 128 if strModel == 'large' or strModel == 'turbo' else 80).to(model_t.device)
 AudioInfo.showGraphCompairMelSpec(originalAudio, denoisedAudio, melOriginalAudio)
 
 # Chuyển mảng thành chuỗi
 originalAudioStr = np.array2string(originalAudio, separator=', ')
 
-sr=22050
+sr = 16000
 ipd.Audio(originalAudioTrim, rate = sr)
 _, probs = model_t.detect_language(melOriginalAudio)
 detectedLanguage = max(probs, key = probs.get)
