@@ -275,7 +275,6 @@ def popupInputLinkFileName():
         buttonGet.config(text="Tải lại file")
         resultLabel.config(text="Lỗi tải file, vui lòng nhập lại link và tải lại!")
         
-
     def showSuccess():
         global _strModel, _videoUrl, _filePath
         window.geometry("400x380")
