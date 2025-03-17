@@ -68,8 +68,8 @@ if 'youtube' in video_url:
                     f"Kết quả nhận đã lọc   : {transCleanDe}\n\n" \
                     f"Kết quả gốc           : {gtClean}\n\n" \
                     f"Loại ngôn ngữ         : {detectedLanguage}\n\n" \
-                    f"Word Error Rate (WER) 1: {werScore:.2%}\n\n" \
-                    f"Word Error Rate (WER) 2: {werScoreDe:.2%}\n\n" \
+                    f"Word Error Rate (WER) : {werScore:.2%}\n\n" \
+                    f"Word Error Rate De (WER) : {werScoreDe:.2%}\n\n" \
     
 else :
     # Đoạn văn bản cần hiển thị

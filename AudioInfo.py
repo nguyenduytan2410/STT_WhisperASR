@@ -11,7 +11,6 @@ from urllib.parse import urlparse
 from youtube_transcript_api import YouTubeTranscriptApi
 import requests
 import threading
-import whisper
 
 # Xóa kí tự đặc biệt khi đặt tên file
 def removeSpecialChars(_inputText):
@@ -267,7 +266,6 @@ def popupInputLinkFileName():
         buttonGet.config(text="Tải lại file")
         resultLabel.config(text="Lỗi tải file, vui lòng nhập lại link và tải lại!")
         
-
     def showSuccess():
         window.geometry("400x300")
         disableView()
@@ -302,7 +300,6 @@ def popupInputLinkFileName():
         buttonClose.pack_forget()
         resultLabel.pack_forget()
         
-
     window = tkinter.Tk()
     window.title("Nhập thông tin")
     window.geometry("400x150")
