@@ -36,8 +36,10 @@ except Exception as e:
 
 # # Vẽ biểu đồ
 originalAudioTrim = whisper.pad_or_trim(originalAudio)
+denoisedAudioTrim = whisper.pad_or_trim(denoisedAudio)
 melOriginalAudio = whisper.log_mel_spectrogram(originalAudioTrim, n_mels = 128 if strModel == 'large' or strModel == 'turbo' else 80).to(model_t.device)
-AudioInfo.showGraphCompairMelSpec(originalAudio, denoisedAudio, melOriginalAudio)
+melDeAudio = whisper.log_mel_spectrogram(denoisedAudioTrim, n_mels = 128 if strModel == 'large' or strModel == 'turbo' else 80).to(model_t.device)
+AudioInfo.showGraphCompairMelSpec(originalAudio, denoisedAudio, melOriginalAudio, melDeAudio)
 
 # Chuyển mảng thành chuỗi
 originalAudioStr = np.array2string(originalAudio, separator=', ')
@@ -60,6 +62,8 @@ transcriptionDeNAud = resultDeNAud["text"]
 transClean = transformation(transcriptionOriAud)
 transCleanDe = transformation(transcriptionDeNAud)
 
+
+
 text_to_show =  f"Dữ liệu âm thanh      : {originalAudioStr}\n\n" \
                 f"Kết quả nhận chưa lọc : {transClean}\n\n" \
                 f"Kết quả nhận đã lọc   : {transCleanDe}\n\n" \
@@ -69,12 +73,14 @@ text_to_show =  f"Dữ liệu âm thanh      : {originalAudioStr}\n\n" \
 if 'youtube' in video_url:
     referenceText = AudioInfo.getAudioScript(video_url, detectedLanguage)
     if referenceText != '':
+        snr = AudioInfo.snr(originalAudio, denoisedAudio)
         gtClean = transformation(referenceText)
         werScore = jiwer.wer(gtClean, transClean)
         werScoreDe = jiwer.wer(gtClean, transCleanDe)
 
         # Đoạn văn bản cần hiển thị
         text_to_show += f"Dữ liệu làm tham chiếu : {gtClean}\n\n" \
+                        f"SNR của bộ lọc         : {snr:.2f} dB\n\n" \
                         f"Word Error Rate (WER) 1: {werScore:.2%}\n\n" \
                         f"Word Error Rate (WER) 2: {werScoreDe:.2%}\n\n" \
 

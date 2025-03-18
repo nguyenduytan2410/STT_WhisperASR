@@ -5,6 +5,7 @@ import json
 import soundfile as sf
 import noisereduce as nr
 import matplotlib.pyplot as plt
+import numpy as np
 import tkinter
 from tkinter import ttk, scrolledtext
 from urllib.parse import urlparse
@@ -189,7 +190,7 @@ def boLocNhieu(_filePath, _sr = 16000):
     _noisePart = _originalAudio[-_sr:]
 
     # Áp dụng bộ lọc giảm nhiễu
-    _denoisedAudio = nr.reduce_noise(y = _originalAudio, sr = _sr, y_noise = _noisePart, prop_decrease = 0.5)
+    _denoisedAudio = nr.reduce_noise(y = _originalAudio, sr = _sr, y_noise = _noisePart, prop_decrease = 0.2)
     _filePathDN = _filePath.replace('.mp3', '_denoise.mp3')
     if os.path.exists(_filePathDN):
         os.remove(_filePathDN)
@@ -198,26 +199,34 @@ def boLocNhieu(_filePath, _sr = 16000):
     return _originalAudio, _denoisedAudio
 
 #Vẽ biểu đồ so sánh và đồ thị Mel Spectrogram của âm thanh gốc
-def showGraphCompairMelSpec(_originalAudio, _denoisedAudio, mel, _sr = 16000):
-    plt.figure(figsize=(10, 6)) # Thiết lập độ dài rộng cho cửa sổ biểu đồ
+def showGraphCompairMelSpec(_originalAudio, _denoisedAudio, mel, melDeN, _sr = 16000):
+    plt.figure(figsize=(10, 8)) # Thiết lập độ dài rộng cho cửa sổ biểu đồ
      # Vẽ đồ thị
-    plt.subplot(2, 2, 1)  # 2 hàng, 2 cột, vị trí 1
+    plt.subplot(3, 2, 1)
     librosa.display.waveshow(_originalAudio, sr = _sr, alpha=0.5, color='r')
     plt.title("Tín hiệu gốc (Original Audio)")
     plt.xlabel("Thời gian (giây)")
     plt.ylabel("Biên độ")
 
     # Biểu đồ 2: Tín hiệu sau lọc nhiễu
-    plt.subplot(2, 2, 2)  # 2 hàng, 2 cột, vị trí 2
+    plt.subplot(3, 2, 2)
     librosa.display.waveshow(_denoisedAudio, sr=_sr, alpha=0.5, color='b')
     plt.title("Tín hiệu sau lọc nhiễu (Denoised Audio)")
     plt.xlabel("Thời gian (giây)")
     plt.ylabel("Biên độ")
 
     # Biểu đồ 3: Mel Spectrogram
-    plt.subplot(2, 1, 2)  # 2 hàng, 1 cột, vị trí 2 (hàng dưới)
+    plt.subplot(3, 1, 2)
     plt.imshow(mel.cpu().numpy(), interpolation='nearest', aspect='auto')
-    plt.title("Mel Spectrogram của tín hiệu")
+    plt.title("Mel Spectrogram của tín hiệu gốc")
+    plt.xlabel("Thời gian (khung)")
+    plt.ylabel("Thang Mel")
+    plt.colorbar(label='Cường độ (dB)')  # Thêm thanh màu để dễ đọc
+
+    # Biểu đồ 3: Mel Spectrogram
+    plt.subplot(3, 1, 3) 
+    plt.imshow(melDeN.cpu().numpy(), interpolation='nearest', aspect='auto')
+    plt.title("Mel Spectrogram của tín hiệu lọc nhiễu")
     plt.xlabel("Thời gian (khung)")
     plt.ylabel("Thang Mel")
     plt.colorbar(label='Cường độ (dB)')  # Thêm thanh màu để dễ đọc
@@ -252,9 +261,9 @@ def popupInputLinkFileName():
             return
         if _filePath is None or _filePath == '':
             _filePath = 'default_name'
+            entryFileName.insert(0, _filePath)
         _filePath = _filePath[0:_filePath.index('.mp3')] if '.mp3' in _filePath else _filePath
         _filePath = removeSpecialChars(_filePath) + '.mp3'
-        entryFileName.insert(0, _filePath) 
         if os.path.exists(_filePath):
             os.remove(_filePath)
         _filePathDN = _filePath.replace('.mp3', '_denoise.mp3')
@@ -416,3 +425,9 @@ def popupInputLinkFileName():
         return None, None, None
     except Exception as e:
         return None, None, None
+
+def snr(signal, denoise):
+    noise = signal - denoise
+    power_signal = np.mean(signal ** 2)
+    power_noise = np.mean(noise ** 2)
+    return 10 * np.log10(power_signal / power_noise)
