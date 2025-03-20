@@ -14,3 +14,6 @@ AudioInfo
 ffmpeg-python
 tk
 git+https://github.com/openai/whisper.git
+torchaudio
+datasets
+git+https://github.com/huggingface/transformers
